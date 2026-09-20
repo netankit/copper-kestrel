@@ -1,0 +1,27 @@
+image:
+  repository: us-central1-docker.pkg.dev/acme-prod/platform/searchd
+  tag: "1.12.0"
+  pullPolicy: IfNotPresent
+
+replicaCount: 3
+
+resources:
+  requests:
+    cpu: "6"
+    memory: 24Gi
+  limits:
+    cpu: "8"
+    memory: 28Gi
+
+storage:
+  size: 800Gi
+  className: local-ssd
+
+service:
+  port: 8080
+
+ingest:
+  enabled: true
+
+env:
+  indexLoadSeconds: "840"

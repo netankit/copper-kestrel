@@ -1,0 +1,45 @@
+name: deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  REGISTRY: us-central1-docker.pkg.dev/acme-prod/platform
+  IMAGE: searchd
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Build image
+        run: |
+          docker build -t $REGISTRY/$IMAGE:${{ github.sha }} ./app
+          docker tag $REGISTRY/$IMAGE:${{ github.sha }} $REGISTRY/$IMAGE:latest
+
+      - name: Push image
+        run: |
+          gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+          docker push $REGISTRY/$IMAGE:${{ github.sha }}
+          docker push $REGISTRY/$IMAGE:latest
+
+      - name: Get cluster credentials
+        run: |
+          gcloud container clusters get-credentials prod-search --zone us-central1-a
+
+      - name: Deploy
+        run: |
+          helm upgrade --install searchd ./helm \
+            --set image.tag=${{ github.sha }} \
+            --namespace search
+
+      - name: Done
+        run: echo "Deployed ${{ github.sha }}"
