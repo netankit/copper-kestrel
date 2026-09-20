@@ -37,8 +37,6 @@ live segment on the same replicas.
 
 ## Running it locally
 
-Optional — reading the code is enough.
-
 ### Prerequisites
 
 The local flow needs `docker`, `kind`, `kubectl`, `helm`, `make`, and `curl`.
